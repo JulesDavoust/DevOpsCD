@@ -1,0 +1,96 @@
+pipeline {
+    agent {
+        label 'jenkins-slave'
+    }
+
+    environment {
+        BACKEND_IMAGE = "backend:dev"
+        FRONTEND_IMAGE = "frontend:dev"
+        KUBE_CONFIG_PATH = "/home/jenkins/.kube/config" // Chemin vers kubeconfig
+    }
+
+    stages {
+        stage('Cloning Git') {
+            steps {
+                git branch: 'main', credentialsId: 'myid', url: 'https://github.com/your-repo'
+            }
+        }
+
+        stage('Building backend image') {
+            steps {
+                script {
+                    dir('TP-1/backend') {
+                        backendImage = docker.build(env.BACKEND_IMAGE)
+                    }
+                }
+            }
+        }
+
+        stage('Building frontend image') {
+            steps {
+                script {
+                    dir('TP-1/frontend') {
+                        frontendImage = docker.build(env.FRONTEND_IMAGE)
+                    }
+                }
+            }
+        }
+
+        stage('Load Images into Minikube') {
+            steps {
+                script {
+                    sh "minikube image load ${env.BACKEND_IMAGE}"
+                    sh "minikube image load ${env.FRONTEND_IMAGE}"
+                }
+            }
+        }
+
+        stage('Deploy to Development Environment') {
+            steps {
+                script {
+                    sh '''
+                    export KUBECONFIG=${KUBE_CONFIG_PATH}
+                    kubectl apply -f k8s/development/backend-deployment.yaml
+                    kubectl apply -f k8s/development/frontend-deployment.yaml
+                    '''
+                }
+            }
+        }
+
+        stage('Test Application in Development') {
+            steps {
+                script {
+                    def response = sh(script: 'curl -s -o /dev/null -w "%{http_code}" http://$(minikube ip):30000/api/endpoint', returnStdout: true).trim()
+                    if (response != "200") {
+                        error "Application test failed in development. HTTP Response: ${response}"
+                    }
+                }
+            }
+        }
+
+        stage('Deploy to Production Environment') {
+            steps {
+                script {
+                    sh '''
+                    export KUBECONFIG=${KUBE_CONFIG_PATH}
+                    kubectl apply -f k8s/production/backend-deployment.yaml
+                    kubectl apply -f k8s/production/frontend-deployment.yaml
+                    '''
+                }
+            }
+        }
+    }
+
+    post {
+        always {
+            echo 'Cleaning up workspace...'
+            cleanWs()
+        }
+        success {
+            echo 'Pipeline completed successfully!'
+        }
+        failure {
+            echo 'Pipeline failed. Check logs for details.'
+        }
+    }
+}
