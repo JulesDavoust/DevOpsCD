@@ -50,8 +50,12 @@ pipeline {
           // Test l'endpoint /whoami
           def response = sh(script: "curl -s http://development-webapi-service:8080/whoami", returnStdout: true).trim()
           
-          if (!response.contains('DAVOUST')) {
-            error("Test failed: Expected response to contain 'DAVOUST', but got: " + response)
+          def expectedResponse = '{"Class":"SE1","Students":[{"FirstName":"Vadim","LastName":"BERNARD"},{"FirstName":"Jules","LastName":"DAVOUST"},{"FirstName":"Robin","LastName":"LUCAS"}]}'
+
+          if (response == expectedResponse) {
+            echo "Test Passed: Response matches the expected output."
+          } else {
+            error("Test Failed: Response does not match the expected output.\nResponse: ${response}")
           }
         }
       }
