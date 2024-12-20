@@ -26,6 +26,8 @@ fi
 if [ ! -d "/home/jenkins" ]; then
     echo "Jenkins home directory does not exist. Creating it..."
     sudo mkdir -p /home/jenkins
+    chown -R jenkins:jenkins /home/jenkins
+    chmod 755 /home/jenkins
 else
     echo "Jenkins home directory already exists."
 fi
@@ -36,7 +38,10 @@ if [ ! -d "/home/jenkins/.ssh" ] || [ -z "$(ls -A /home/jenkins/.ssh)" ]; then
     ssh-keygen -t rsa -b 2048 -f /home/jenkins/.ssh/id_rsa -C "jenkins-agent" -N ""
     cat /home/jenkins/.ssh/id_rsa.pub > /home/jenkins/.ssh/authorized_keys
     chmod 600 /home/jenkins/.ssh/authorized_keys
+    chmod 600 /home/jenkins/.ssh/id_rsa
+    chmod 644 /home/jenkins/.ssh/id_rsa.pub
     chmod 700 /home/jenkins/.ssh
+    chown -R jenkins:jenkins ~/.ssh
 else
     echo "Jenkins .ssh directory already exists and is not empty."
 fi
@@ -63,6 +68,14 @@ sudo systemctl restart ssh
 
 echo "=============================================
 Si ce n'est pas déjà fait il vous reste :
+Install plugin :
+
+-> Git Plugin (pas forcément obligé)
+-> Docker Pipeline Plugin
+-> Credentials Plugin (pas forcément obligé)
+
+- restart jenkins (docker restart jenkins)
+
 Config credentials Jenkins :
 Tableau de bord > Administrer Jenkins > Identifiants
 
@@ -85,4 +98,9 @@ Tableau de bord > Nœuds > New node
 - Méthode de lanceur d'agent : 'Launch agent via SSH'
 - Host : adresse IP de la VM
 - Credentials : sélectionnez le credential que vous avez créé pour la connexion SSH
-- Host Key Verification Strategy : 'Non verifying Verification Strategy'"
+- Host Key Verification Strategy : 'Non verifying Verification Strategy'
+
+Créer la pipeline :
+Tableau de bord > Nouvel élément > Pipeline
+- Nommez la pipeline
+- Sélectionnez 'Pipeline script from SCM'"

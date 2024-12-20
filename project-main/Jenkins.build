@@ -1,96 +1,49 @@
+def backendImage = ''
+def frontendImage = ''
 pipeline {
-    agent {
-        label 'jenkins-slave'
+
+  agent {
+    label 'vm-agent'
+  }
+
+  stages {
+    stage('Cloning Git') {
+      steps {
+        git branch: 'main', credentialsId: 'github-credential', url: 'https://github.com/JulesDavoust/DevOpsCD.git'
+      }
+    }
+    stage('Building image') {
+      steps {
+        script {
+          dir('project-main/webapi') {
+            webapiImage = docker.build("thedevgods/devopsproject:1")
+
+          }
+        }
+      }
+    }
+    stage('Publish webapi Image') {
+      steps {
+        script {
+          withDockerRegistry(credentialsId: 'docker-credential') {
+            webapiImage.push()
+          }
+
+        }
+      }
     }
 
-    environment {
-        BACKEND_IMAGE = "backend:dev"
-        FRONTEND_IMAGE = "frontend:dev"
-        KUBE_CONFIG_PATH = "/home/jenkins/.kube/config" // Chemin vers kubeconfig
+    stage('Deploy webapi container') {
+      steps {
+        sh "docker network create --driver bridge efrei"
+        sh "docker run -d --net=efrei --name webapi thedevgods/devopsproject:1"
+      }
     }
 
-    stages {
-        stage('Cloning Git') {
-            steps {
-                git branch: 'main', credentialsId: 'myid', url: 'https://github.com/your-repo'
-            }
-        }
-
-        stage('Building backend image') {
-            steps {
-                script {
-                    dir('TP-1/backend') {
-                        backendImage = docker.build(env.BACKEND_IMAGE)
-                    }
-                }
-            }
-        }
-
-        stage('Building frontend image') {
-            steps {
-                script {
-                    dir('TP-1/frontend') {
-                        frontendImage = docker.build(env.FRONTEND_IMAGE)
-                    }
-                }
-            }
-        }
-
-        stage('Load Images into Minikube') {
-            steps {
-                script {
-                    sh "minikube image load ${env.BACKEND_IMAGE}"
-                    sh "minikube image load ${env.FRONTEND_IMAGE}"
-                }
-            }
-        }
-
-        stage('Deploy to Development Environment') {
-            steps {
-                script {
-                    sh '''
-                    export KUBECONFIG=${KUBE_CONFIG_PATH}
-                    kubectl apply -f k8s/development/backend-deployment.yaml
-                    kubectl apply -f k8s/development/frontend-deployment.yaml
-                    '''
-                }
-            }
-        }
-
-        stage('Test Application in Development') {
-            steps {
-                script {
-                    def response = sh(script: 'curl -s -o /dev/null -w "%{http_code}" http://$(minikube ip):30000/api/endpoint', returnStdout: true).trim()
-                    if (response != "200") {
-                        error "Application test failed in development. HTTP Response: ${response}"
-                    }
-                }
-            }
-        }
-
-        stage('Deploy to Production Environment') {
-            steps {
-                script {
-                    sh '''
-                    export KUBECONFIG=${KUBE_CONFIG_PATH}
-                    kubectl apply -f k8s/production/backend-deployment.yaml
-                    kubectl apply -f k8s/production/frontend-deployment.yaml
-                    '''
-                }
-            }
-        }
+    stage('Execute webapi kubernetes') {
+      steps {
+        sh "echo 'kubernetes in action !!'"
+      }
     }
-
-    post {
-        always {
-            echo 'Cleaning up workspace...'
-            cleanWs()
-        }
-        success {
-            echo 'Pipeline completed successfully!'
-        }
-        failure {
-            echo 'Pipeline failed. Check logs for details.'
-        }
-    }
+  }
 }
