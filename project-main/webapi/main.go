@@ -1,41 +1,37 @@
-package main
+GNU nano 7.2                                             main.go                                                      package main
 
 import (
-	"encoding/json"
-	"fmt"
-	"log"
-	"net/http"
+        "encoding/json"
+        "fmt"
+        "log"
+        "net/http"
 )
 
-type whoami struct {
-	Name  string
-	Title string
-	State string
+type Student struct {
+        FirstName string
+        LastName string
+}
+
+type ClassInfo struct{
+        Class string
+        Students []Student
 }
 
 func main() {
-	request1()
+        request1()
 }
 
 func whoAmI(response http.ResponseWriter, r *http.Request) {
-	who := []whoami{
-		whoami[
+	who := ClassInfo{
 			Class : "SE1",
-			Student1 : {
-				FirstName: "Vadim",
-				LastName: "BERNARD",
+			Students: []Student{
+					{FirstName: "Vadim", LastName: "BERNARD"},
+					{FirstName: "Jules", LastName: "DAVOUST"},
+					{FirstName: "Robin", LastName: "LUCAS"},
 			},
-			Student2 : {
-				FirstName: "Jules",
-				LastName: "DAVOUST"
-			},
-			Student3 : {
-				FirstName: "Robin",
-				LastName: "LUCAS"
-			},
-		],
 	}
 
+	response.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(response).Encode(who)
 
 	fmt.Println("Endpoint Hit", who)
@@ -58,5 +54,5 @@ func request1() {
 	http.HandleFunc("/aboutme", aboutMe)
 	http.HandleFunc("/whoami", whoAmI)
 
-	log.Fatal(http.ListenAndServe(":8080", nil))
+	log.Fatal(http.ListenAndServe(":9090", nil))
 }

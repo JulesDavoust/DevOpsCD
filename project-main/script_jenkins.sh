@@ -103,4 +103,11 @@ Tableau de bord > Nœuds > New node
 Créer la pipeline :
 Tableau de bord > Nouvel élément > Pipeline
 - Nommez la pipeline
-- Sélectionnez 'Pipeline script from SCM'"
+- Sélectionnez 'Pipeline script from SCM'
+- SCM : Git
+- Repository URL : URL du repo
+- Credentials : sélectionnez le credential que vous avez créé pour GitHub
+- Branches to build : main
+- Script Path : path/to/Jenkinsfile
+- Enregistrez
+- Build Now"
