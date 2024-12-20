@@ -7,42 +7,66 @@ pipeline {
   }
 
   stages {
+    
     stage('Cloning Git') {
       steps {
         git branch: 'main', credentialsId: 'github-credential', url: 'https://github.com/JulesDavoust/DevOpsCD.git'
       }
     }
-    stage('Building image') {
+
+    stage('Building Image') {
       steps {
         script {
           dir('project-main/webapi') {
             webapiImage = docker.build("thedevgods/devopsproject:1")
-
           }
         }
       }
     }
-    stage('Publish webapi Image') {
+
+    stage('Publish Image') {
       steps {
         script {
           withDockerRegistry(credentialsId: 'docker-credential') {
             webapiImage.push()
           }
-
         }
       }
     }
 
-    stage('Deploy webapi container') {
+    stage('Deploy to Development') {
       steps {
-        sh "docker network create --driver bridge efrei"
-        sh "docker run -d --net=efrei --name webapi thedevgods/devopsproject:1"
+        script {
+          sh "kubectl apply -f namespace-development.yml"
+          sh "kubectl apply -f k8s/development/webapi-deployment.yml"
+          sh "kubectl get pods -n development"
+        }
       }
     }
 
-    stage('Execute webapi kubernetes') {
+    stage('Test in Development') {
       steps {
-        sh "echo 'kubernetes in action !!'"
+        script {
+          // Test l'endpoint /whoami
+          def response = sh(script: "curl -s http://development-webapi-service:8080/whoami", returnStdout: true).trim()
+          
+          if (!response.contains('DAVOUST')) {
+            error("Test failed: Expected response to contain 'DAVOUST', but got: " + response)
+          }
+        }
+      }
+    }
+
+    stage('Deploy to Production') {
+      when {
+        expression { currentBuild.result == null || currentBuild.result == 'SUCCESS' }
+      }
+      steps {
+        script {
+          sh "kubectl apply -f namespace-production.yml"
+          sh "kubectl apply -f k8s/production/webapi-deployment.yml"
+          sh "kubectl get pods -n production"
+        }
       }
     }
   }
