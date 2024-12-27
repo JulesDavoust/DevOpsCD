@@ -10,7 +10,7 @@ pipeline {
     
     stage('Cloning Git') {
       steps {
-        git branch: 'main', credentialsId: 'github-credential', url: 'https://github.com/JulesDavoust/DevOpsCD.git'
+        git branch: 'main', credentialsId: 'GitHub-Repo-Jules', url: 'https://github.com/JulesDavoust/DevOpsCD.git'
       }
     }
 
@@ -27,7 +27,7 @@ pipeline {
     stage('Publish Image') {
       steps {
         script {
-          withDockerRegistry(credentialsId: 'docker-credential') {
+          withDockerRegistry(credentialsId: 'Docker-Credentials') {
             webapiImage.push()
           }
         }
