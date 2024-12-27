@@ -3,7 +3,7 @@ def webapiImage = ''
 pipeline {
 
   agent {
-    label 'vm-agent'
+    label 'agent-vm'
   }
 
   stages {
