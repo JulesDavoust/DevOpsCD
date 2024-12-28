@@ -286,6 +286,45 @@ This stage verifies that the application deployed in the development environment
 ![alt text](/images_README/jenkins/image-41.png)
 Finally, this stage deploys the application to the production environment, provided that all previous stages were successful. It applies the [namespace-production.yml](/project-main/kubernetes/namespace-production.yml) file to configure the production namespace and uses the [webapi-deployment.yml](/project-main/kubernetes/webapi-deployment.yml) file to deploy the application to production. The `kubectl get pods -n production` command then displays the status of the pods deployed in the production namespace to confirm that everything is functioning as expected.
 
+#### Allow Jenkins to Use kubectl
+
+Before configuring the Jenkins pipeline, we need to enable Jenkins to execute kubectl commands.\
+To achieve this, the first step is to create a .kube directory in the Jenkins user's home directory. Then, we will copy the Kubernetes configuration file from the .kube directory of the main user to the Jenkins user's .kube directory. Finally, we will modify specific lines in the configuration file.\
+Here are the commands to execute:
+```sh
+sudo mkdir -p /home/jenkins/.kube
+sudo chown -R jenkins:jenkins /home/jenkins/.kube
+sudo cp /home/<our user>/.kube/config /home/jenkins/.kube/config
+sudo chown jenkins:jenkins /home/jenkins/.kube/config
+sudo nano /home/jenkins/.kube/config
+```
+![alt text](image-130.png)
+In the configuration file, we replaced the following lines:
+```
+client-certificate: /home/<our user>/.minikube/profiles/minikube/client.crt
+client-key: /home/<our user>/.minikube/profiles/minikube/client.key
+certificate-authority: /home/<our user>/.minikube/ca.crt
+```
+With these:
+```
+client-certificate: /home/jenkins/.minikube/profiles/minikube/client.crt
+client-key: /home/jenkins/.minikube/profiles/minikube/client.key
+certificate-authority: /home/jenkins/.minikube/ca.crt
+```
+![alt text](image-131.png)
+
+Finally, we created a .minikube directory for the Jenkins user and copied specific files from the main user's .minikube directory into it. To do so, we executed these commands:
+```sh
+sudo mkdir -p /home/jenkins/.minikube/profiles/minikube
+sudo cp /home/jules/.minikube/profiles/minikube/client.crt /home/jenkins/.minikube/profiles/minikube/
+sudo cp /home/jules/.minikube/profiles/minikube/client.key /home/jenkins/.minikube/profiles/minikube/
+sudo cp /home/jules/.minikube/ca.crt /home/jenkins/.minikube/
+sudo chown -R jenkins:jenkins /home/jenkins/.minikube
+```
+![alt text](image-132.png)
+
+We can now proceed with configuring the Jenkins pipeline.
+
 #### Pipeline Configuration
 
 Once the necessary preparations were completed, we proceeded to configure the pipeline in Jenkins. To do this, we navigated to the following section:\
@@ -310,18 +349,42 @@ After clicking "Save," we triggered a build to test if everything was working co
 ### Verification
 
 We can confirm that the pipeline executed successfully, as shown in the [status](/) :\
+![alt text](/images_README/jenkins/image-133.png)
 
-Or in the [Stages](/) :\
+Or in the [Pipeline overview](/) :\
+![alt text](/images_README/jenkins/image-134.png)
 
-Additionally, we can verify the execution of all stages and view their output in the [Console Output](/):
+Additionally, we can verify the execution of all stages and view their output in the [Console Output](/):\
+Nous pouvons voir que l'image a bien été build :
+![alt text](/images_README/jenkins/image-135.png)\
+De plus, nous l'avons sur notre VM aussi:
+![alt text](/images_README/jenkins/image-143.png)
+
+We can also observe that the DockerHub login was successful and the image was pushed correctly:
+![alt text](/images_README/jenkins/image-136.png)
+![alt text](/images_README/jenkins/image-137.png)
+
+We can also see that the deployment of the API in the development environment was successful:
+![alt text](/images_README/jenkins/image-138.png)\
+This is also confirmed on our VM:
+![alt text](/images_README/jenkins/image-141.png)
+
+When checking the test step, we can see that the test was executed successfully:
+![alt text](/images_README/jenkins/image-139.png)
+
+Finally, we can confirm that the deployment in the production environment was successful, and overall, the pipeline executed as expected:
+![alt text](/images_README/jenkins/image-140.png)\
+Here is the production deployment on our VM:
+![alt text](/images_README/jenkins/image-142.png)
 
 Alternatively, you can check the [Pipeline Console](/), which might be clearer:\
+![alt text](/images_README/jenkins/image-144.png)
 
 Moreover, if we check our DockerHub repository, we can see the image of our API has been successfully uploaded:\
+![alt text](/images_README/jenkins/image-145.png)
 
-Finally, by accessing our VM, we can confirm that both environments have been created, and the API has been deployed to them:\
-
-We can even access it and navigate directly to its endpoint:\
+We can even access it and navigate directly to its endpoint in each environment:\
+![alt text](/images_README/jenkins/image-146.png)
 
 ## Conclusion
 
