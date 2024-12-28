@@ -17,7 +17,7 @@ pipeline {
     stage('Building Image') {
       steps {
         script {
-          dir('project-main/webapi') {
+          dir('project-main') {
             webapiImage = docker.build("thedevgods/devopsproject:1")
           }
         }
@@ -37,8 +37,8 @@ pipeline {
     stage('Deploy to Development') {
       steps {
         script {
-          sh "kubectl apply -f /kubernetes/namespace-development.yml"
-          sh "kubectl apply -f /kubernetes/webapi-deployment.yml"
+          sh "kubectl apply -f kubernetes/namespace-development.yml"
+          sh "kubectl apply -f kubernetes/webapi-deployment.yml"
           sh "kubectl get pods -n development"
         }
       }
@@ -67,8 +67,8 @@ pipeline {
       }
       steps {
         script {
-          sh "kubectl apply -f /kubernetes/namespace-production.yml"
-          sh "kubectl apply -f /kubernetes/webapi-deployment.yml"
+          sh "kubectl apply -f kubernetes/namespace-production.yml"
+          sh "kubectl apply -f kubernetes/webapi-deployment.yml"
           sh "kubectl get pods -n production"
         }
       }
