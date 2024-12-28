@@ -13,3 +13,5 @@ alertmanager:
         email_configs:
           - to: 'jules.davoustperso@gmail.com'
             send_resolved: true
+
+            

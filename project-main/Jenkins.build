@@ -37,8 +37,8 @@ pipeline {
     stage('Deploy to Development') {
       steps {
         script {
-          sh "kubectl apply -f namespace-development.yml"
-          sh "kubectl apply -f k8s/development/webapi-deployment.yml"
+          sh "kubectl apply -f /kubernetes/namespace-development.yml"
+          sh "kubectl apply -f /kubernetes/webapi-deployment.yml"
           sh "kubectl get pods -n development"
         }
       }
@@ -48,7 +48,7 @@ pipeline {
       steps {
         script {
           // Test l'endpoint /whoami
-          def response = sh(script: "curl -s http://development-webapi-service:8080/whoami", returnStdout: true).trim()
+          def response = sh(script: "curl -s http://development-webapi-service:9090/whoami", returnStdout: true).trim()
           
           def expectedResponse = '{"Class":"SE1","Students":[{"FirstName":"Vadim","LastName":"BERNARD"},{"FirstName":"Jules","LastName":"DAVOUST"},{"FirstName":"Robin","LastName":"LUCAS"}]}'
 
@@ -67,8 +67,8 @@ pipeline {
       }
       steps {
         script {
-          sh "kubectl apply -f namespace-production.yml"
-          sh "kubectl apply -f k8s/production/webapi-deployment.yml"
+          sh "kubectl apply -f /kubernetes/namespace-production.yml"
+          sh "kubectl apply -f /kubernetes/webapi-deployment.yml"
           sh "kubectl get pods -n production"
         }
       }
