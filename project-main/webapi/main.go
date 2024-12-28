@@ -1,4 +1,4 @@
-GNU nano 7.2                                             main.go                                                      package main
+package main
 
 import (
         "encoding/json"
