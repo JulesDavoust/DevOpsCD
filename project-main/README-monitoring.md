@@ -352,6 +352,15 @@ Manually enter a query such as : {namespace="production"} |= "error"
 ![alt text](/images_README/monitoring/image-66.png)
 This query lists all logs containing the word "error" in the "production" namespace:\
 ![alt text](/images_README/monitoring/image-67.png)
+#
+If we test this with the deployment made through our Jenkins pipeline:\
+We can see that in the "development" namespace, there are no logs containing the word "error":\
+On peut voir que dans le namespace "development" il n'y pas de logs comportant le mot "error" :\
+![alt text](/images_README/monitoring/image-300.png)
+
+And in the "production" namespace:\
+![alt text](/images_README/monitoring/image-301.png)
+We observe that there are logs containing the term "error," but they come from the "error-logger" pod that we created to simulate logs.
 
 ## Conclusion
 
