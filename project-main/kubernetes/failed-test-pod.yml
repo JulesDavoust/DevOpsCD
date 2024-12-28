@@ -4,7 +4,9 @@ metadata:
   name: failed-test-pod
   namespace: monitoring
 spec:
+  restartPolicy: Never
   containers:
     - name: busybox
       image: busybox:latest
       command: ["sh", "-c", "exit 1"]
+

@@ -1,173 +1,167 @@
 # Build and deploy our application
 
-Dans cette partie nous allons voir comment nous avons utilisé kubernetes, docker et jenkins pour créer build et un déploiement continue.
+In this section, we will explore how we utilized Kubernetes, Docker, and Jenkins to implement a continuous build and deployment process.
 
-Nous allons dans un premier temps voir comment nous avons mis en place le test de notre application en go, pour que l'endpoint [/whoami]() retourne la valeur que l'on souhaite.
+First, we will discuss how we set up the testing for our Go application to ensure the [/whoami]() endpoint returns the expected value.
 
-## Test de l'application en GO
+## Testing the Application in Go
 
-Vous pouvez retrouver le code de notre application dans le fichier [main.go](webapi/main.go) et le test de l'API dans le fichier [main_test.go](webapi/main_test.go).
+You can find the code for our application in the [main.go](webapi/main.go) file and the API test in the [main_test.go](webapi/main_test.go) file.
 
-La première étape a été de nous acclimater avec le langage de programmation go et de comprendre le code déjà présent pour ensuite pouvoir le modifier pour rajouter nos noms, prénoms et groupe de classe à l'endpoint [/whoami]().
+The first step involved familiarizing ourselves with the Go programming language and understanding the existing code. This allowed us to modify the application and add our names, surnames, and class group to the [/whoami]() endpoint.
 
-### Modification des types
+### Modification of Types
 
-Nous avons été à modifier le fichier [main.go](webapi/main.go), en rajoutant des types et en modifiant la fonction `whoAmI()` et la fonction `request1()`.
+We modified the [main.go](webapi/main.go) file by adding new types and updating the `whoAmI()` and `request1()` functions.
 
-Le seul type qu'il y avait auparavant était le suivant :\
-![alt text](/images_README/image-bis.png)
+Previously, there was only one type defined in the code:\
+![alt text](/images_README/jenkins/image-bis.png)
 
-Nous avons été amené à en rajouter deux autres et à supprimer l'ancien :\
-![alt text](/images_README/image.png)
+We introduced two new types and removed the old one:\
+![alt text](/images_README/jenkins/image.png)
 
+The old type was removed because it no longer suited our requirements. By including our class and personal information, we needed to create a new type, `ClassInfo`, to store the class details and our personal information. To handle our personal data, we introduced a `Student` type to store first names and last names.
 
-Nous avons supprimé l'ancien type car il ne correspondait plus à notre besoin, en rajoutant notre classe et nos prénoms et noms nous devions créer un type `ClassInfo` qui allait stocker notre classe et nos informations. Pour stocker nos informations personnelles nous avons dû créer un type `Student` permettant de stocker nos prénoms et noms.
+### Modification of Functions
 
-### Modification des fonctions
+To complete the updates in this file, we modified two functions: `whoAmI()` and `request1()`.
 
-Pour finir avec ce fichier, nous avons dû modifier deux fonctions comme dit précédemment, la fonction `whoAmI()` et `request1()`.
+The original `whoAmI()` function looked like this:\
+![alt text](/images_README/jenkins/image-1.png)
 
+After introducing the new types, we updated the `whoAmI()` function accordingly:\
+![alt text](/images_README/jenkins/image-2.png)
 
-L'ancienne fonction whoAmI ressemblait à ça :\
-![alt text](/images_README/image-1.png)
+The main changes are reflected in the structure of the `who` variable, as we leveraged the newly created types.
 
-Cependant, en modifiant les types nous avons donc aussi dû modifier la fonction whoAmI :\
-![alt text](/images_README/image-2.png)
+Finally, we made a small adjustment to the `request1()` function by changing the API's port from 8080 to 9090, since port 8080 was already in use by Jenkins.\
 
-Les prinpaux changement se passent surtout au niveau de la structure de la variable who, comme on peut le constater, où nous avons dû jouer avec les différents types créés.
-
-
-Finalement, nous avons fait un dernier petit changement au niveau de la fonction request1() où nous avons modifier le port de l'API en le passant de 8080 à 9090, étant donné que le port 8080 est déjà utilisé par jenkins.\
-
-![alt text](/images_README/image-3.png) ![alt text](/images_README/image-4.png)
+![alt text](/images_README/jenkins/image-3.png) ![alt text](/images_README/jenkins/image-4.png)
 
 
 ## Configuration de Kubernetes et docker
 
-## Configuration de jenkins
+## Jenkins Configuration
 
-La partie finale du build and deploy a été la configuration de jenkins. Ce dernier va permettre d'exécuter une pipeline nous permettant d'exécuter des actions tels que le build des images, le déploiement de l'application dans l'environnement de développement pour la tester, puis si le test est passé de la déployer en production.
+The final step of the build and deploy process was configuring Jenkins. Jenkins allows us to execute a pipeline that performs tasks such as building images, deploying the application in the development environment for testing, and then deploying it to production if the test passes.
 
-Avant de créer la pipeline il nous a fallu, comme je l'ai dit précédemment, configurer jenkins, pour qu'il puisse se connecter à notre VM pour l'utiliser en tant que slave, pour qu'il puisse accéder à notre repository github, à notre dockerhub (pour push les images). 
+Before creating the pipeline, we had to configure Jenkins to connect to our VM and use it as a slave. Additionally, we needed to enable Jenkins to access our GitHub repository and DockerHub (to push the images).
 
-Nous avons d'abord installé l'image de jenkins sur notre VM :
+We started by installing the Jenkins image on our VM:
 ```sh
 sudo docker run -d -p 8080:8080 -p 50000:50000 --name jenkins --restart unless-stopped jenkins/Jenkins:lts-jdk17
 ```
 
-Ensuite nous avons récupéré nos identifiants jenkins pour nous y connecter:
+Next, we retrieved the Jenkins credentials to log in:
 ```sh
 sudo docker exec Jenkins cat /var/jenkins_home/secrets/initialAdminPassword
 ```
 
-Nous allons maintenant voir plus dans le détail ce que nous avons fait pour configuré jenkins.
+Now, let's delve deeper into the specific steps we took to configure Jenkins.
 
-### Installation des plugins
+### Plugin Installation
 
-La première chose que nous avons fait c'est installer les plugins suivant (parfois il y en a pas besoin et ils sont déjà installés) :
+The first step we took was to install the following plugins (though sometimes they may already be installed):
 
-- Git Plugin
-- Docker Pipeline
-- Credentials Plugin
+- Git Plugin  
+- Docker Pipeline  
+- Credentials Plugin  
 
-Pour cela, on s'est rendu dans cette partie :\
-[Tableau de bord > Administrer jenkins > Plugins](http://localhost:8080/manage/pluginManager/available)
+To install these plugins, we navigated to the following section:\
+[Dashboard > Manage Jenkins > Plugins](http://localhost:8080/manage/pluginManager/available)
 
-Puis dans plugins disponible et ensuite on a cherché les plugins ci-dessus.
+From there, we accessed the "Available Plugins" tab and searched for the plugins listed above.
 
-### Configuration des credentials
+### Credentials Configuration
 
-Ensuite, ce que nous avons fait c'est : configurer les credentials dont nous allions avoir besoin pour mener à bien ce projet. C'est-à-dire les credentials de notre repository GitHub, celui de notre DockerHub et de notre VM.
+Next, we configured the credentials we needed to successfully complete this project. This included the credentials for our GitHub repository, DockerHub, and VM.
 
-#### GitHub credentials
+#### GitHub Credentials
 
-Pour configurer le credential de notre compte GitHub il nous a fallu générer un token d'accès avec des droits bien précis. Pour cela nous nous sommes rendus dans :\
-[settings > Developer settings > Personal access tokens > Tokens (classic)](https://github.com/settings/tokens)
+To configure the credential for our GitHub account, we first needed to generate an access token with specific permissions. For this, we navigated to:\
+[Settings > Developer settings > Personal access tokens > Tokens (classic)](https://github.com/settings/tokens)
 
-Ensuite, nous avons généré un nouveau token classic avec les permissions suivantes :\
-![alt text](/images_README/image-5.png)
-![alt text](/images_README/image-6.png)
-![alt text](/images_README/image-7.png)
+We then generated a new classic token with the following permissions:\
+![alt text](/images_README/jenkins/image-5.png)
+![alt text](/images_README/jenkins/image-6.png)
+![alt text](/images_README/jenkins/image-7.png)
 
-On a ensuite notre token qui est généré :\
-![alt text](/images_README/image-8.png)
+Once the token was generated:\
+![alt text](/images_README/jenkins/image-8.png)
 
-On le récupére et on va venir créer un credential dans nos identifiants globaux:\
-[Tableau de bord > Administrer jenkins > Identifiants > System > Identifiants globaux (illimité)](http://localhost:8080/manage/credentials/store/system/domain/_/)
+We retrieved the token and created a credential in Jenkins under Global Credentials:\
+[Dashboard > Manage Jenkins > Credentials > System > Global credentials (unrestricted)](http://localhost:8080/manage/credentials/store/system/domain/_/)
 
-On va ajouter un nouveau credentials en choisissant "Nom d'utilisateur et mot de passe":\
-![alt text](/images_README/image-9.png)
+We added a new credential by selecting "Username and password":\
+![alt text](/images_README/jenkins/image-9.png)
 
-Nous rentrons notre nom d'utilisateur GitHub et notre token généré précdemment :\
-![alt text](/images_README/image-10.png)
+Next, we entered our GitHub username and the previously generated token:\
+![alt text](/images_README/jenkins/image-10.png)
 
-Nous cliquons sur "Create" et c'est bon notre credentials GitHub est configuré !\
-![alt text](/images_README/image-13.png)
+Finally, we clicked "Create," and our GitHub credential was successfully configured!\
+![alt text](/images_README/jenkins/image-13.png)
 
-#### DockerHub credentials
+#### DockerHub Credentials
 
-Pour configurer le credential de notre compte DockerHub il nous a aussi fallu générer un token d'accès. Pour cela nous nous sommes rendus dans :\
+To configure the credential for our DockerHub account, we also needed to generate an access token. For this, we navigated to:\
 [Account settings > Personal access tokens > Generate new token](https://app.docker.com/settings/personal-access-tokens/create)
 
-Puis nous avons configuré notre token de cette façon :\
-![alt text](/images_README/image-11.png)
+We then configured our token as follows:\
+![alt text](/images_README/jenkins/image-11.png)
 
-Notre token nous est alors donné et on peut constater qu'il a bien été créé :\
-![alt text](/images_README/image-12.png)
+The token was generated, and we could confirm its creation:\
+![alt text](/images_README/jenkins/image-12.png)
 
-Pour finir nous nous rendons sur jenkins pour configurer notre credentials DockerHub (même endroit que pour celui de GitHub) :
-[Tableau de bord > Administrer jenkins > Identifiants > System > Identifiants globaux (illimité)](http://localhost:8080/manage/credentials/store/system/domain/_/)
+Finally, we navigated to Jenkins to configure our DockerHub credentials (in the same location as for GitHub):\
+[Dashboard > Manage Jenkins > Credentials > System > Global credentials (unrestricted)](http://localhost:8080/manage/credentials/store/system/domain/_/)
 
-Globalement c'est la même démarche que pour celui de GitHub, simplement nous allons mettre votre nom d'utilisateur DockerHub et le token que nous venons de générer :\
-![alt text](/images_README/image-14.png)
+The process is similar to the GitHub credential setup, but this time, we entered our DockerHub username and the token we just generated:\
+![alt text](/images_README/jenkins/image-14.png)
 
-Nous choisissons "Create" et c'est bon notre credentials DockerHub est configuré !\
-![alt text](/images_README/image-15.png)
+We selected "Create," and our DockerHub credential was successfully configured!\
+![alt text](/images_README/jenkins/image-15.png)
 
 #### VM credentials
 
-Pourquoi devons-nous configurer un credentials pour notre VM ? Tout simplement car nous allons autoriser jenkins à utiliser notre VM comme esclave, c'est-à-dire qu'elle va être utilisé par jenkins pour qu'il puisse exécuter les actions de la pipeline.
+Why do we need to configure credentials for our VM? Simply because we will allow Jenkins to use our VM as a slave, meaning it will be utilized by Jenkins to execute pipeline actions.
 
-Pour cela nous allons devoir générer une clé RSA sur notre VM. Avant cela, nous allons créer un dossier "jenkins" :\
-![alt text](/images_README/image-17.png)
-
-Nous allons maintenant autoriser l'utilisateur jenkins à accéder à ce dossier, pour cela il va falloir créer l'utilisateur et l'ajouter en exécutant ces commandes :
+To achieve this, we need to generate an RSA key pair on our VM. First, we will create a jenkins user, which will also create a jenkins directory, by executing the following commands:
 ```sh
 sudo adduser jenkins
 chown -R jenkins:jenkins /home/jenkins
 chmod 700 /home/jenkins
 ```
-![alt text](/images_README/image-18.png)
+![alt text](/images_README/jenkins/image-18.png)
 
 
-Ensuite, dans le dossier "jenkins" nous allons créer un dossier ".ssh" :\
-![alt text](/images_README/image-16.png)
+Next, inside the jenkins directory, we will create a .ssh folder:\
+![alt text](/images_README/jenkins/image-16.png)
 
-C'est dans ce dossier que nous allons déplacer notre paire de clé RSA après sa génération :
+This folder will hold our RSA key pair after its generation:
 ```sh
 ssh-keygen -t rsa -b 2048 -C "jenkins-agent"
 ```
-![alt text](/images_README/image-19.png)\
-On peut voir que nos clés se sont bien créées.
+![alt text](/images_README/jenkins/image-19.png)\
+As shown above, the keys have been successfully created.
 
-Nous allons rajouter notre clé publique dans un fichier "authorized_keys" via cette commande :
+We will then add the public key to an authorized_keys file using the following command:
 ```sh
 cat ~/.ssh/id_rsa.pub >> ~/.ssh/authorized_keys
 ```
-![alt text](/images_README/image-42.png)
+![alt text](/images_README/jenkins/image-42.png)
 
-Nous devons faire ça pour indiquer à la VM que nous autorisons les personnes possédant la clé en question à se connecter.
+This step informs the VM that users with the corresponding private key are allowed to connect.
 
-Pour finir nous allons déplacer les clés que nous avons généré dans le dossier .ssh du dossier "jenkins" :
+Finally, we will move the generated keys into the .ssh folder within the jenkins directory:
 ```sh
 cp ~/.ssh/id_rsa /home/jenkins/.ssh/
 cp ~/.ssh/id_rsa.pub /home/jenkins/.ssh/
 cp ~/.ssh/authorized_keys /home/jenkins/.ssh/
 ```
 
-Cela va permettre à jenkins de se connecter à notre VM.
+This setup allows Jenkins to connect to our VM.
 
-On va maintenant devoir modifier les autorisations au niveau des fichiers et des dossier en exécutant ces commandes :
+Next, we need to adjust the file and folder permissions by running these commands:
 ```sh
 chmod 600 /home/jenkins/.ssh/authorized_keys
 chmod 600 /home/jenkins/.ssh/id_rsa
@@ -175,181 +169,159 @@ chmod 644 /home/jenkins/.ssh/id_rsa.pub
 chmod 700 /home/jenkins/.ssh
 chown -R jenkins:jenkins /home/jenkins/.ssh
 ```
-![alt text](/images_README/image-21.png)\
-Cela va nous permettre de bien configurer nos clés et d'éviter les problèmes de connexions entre jenkins et notre VM.
+![alt text](/images_README/jenkins/image-21.png)\
+These commands ensure proper configuration of the keys and prevent connectivity issues between Jenkins and the VM.
 
-Enfin, pour finir la configuration du credential de notre VM nous allons devoir nous rendre dans ce fichier :
+To complete the credential setup, we must edit the following file:
 ```sh
 nano /etc/ssh/sshd_config
 ```
-Pour y modifier cette ligne :\
-![alt text](/images_README/image-22.png)\
-En remplaçant "no" par "yes".
+Modify the following line:\
+![alt text](/images_README/jenkins/image-22.png)\
+Replace no with yes.
 
-Et cette ligne :\
-![alt text](/images_README/image-23.png)\
-En remplaçant "yes" par "no".
-Et nous allons maintenant redémarrer notre système ssh en exécutant cette commande :
+And this line:\
+![alt text](/images_README/jenkins/image-23.png)\
+Replace yes with no.
+After making these changes, restart the SSH service with the following command:
 ```sh
 sudo systemctl restart ssh
 ```
 
-
-Nous sauvegardons, et pour finir nous allons copier notre clé privée RSA :
+Save the changes. Finally, we will copy the private RSA key:
 ```sh
 cat /home/jenkins/.ssh/id_rsa
 ```
-![alt text](/images_README/image-24.png)
+![alt text](/images_README/jenkins/image-24.png)
 
-Nous allons nous rendre au même endroit que précédemment pour configurer des credentials sur jenkins :\
+Next, navigate to the following location in Jenkins to configure the VM credentials:\
 [Tableau de bord > Administrer jenkins > Identifiants > System > Identifiants globaux (illimité)](http://localhost:8080/manage/credentials/store/system/domain/_/)
 
-Sauf que cette fois-ci nous allons choisir "SSH Username withe private key":\
-![alt text](/images_README/image-25.png)
+This time, choose "SSH Username with private key":\
+![alt text](/images_README/jenkins/image-25.png)
 
-Nous allons ensuite rentrer un ID, une description et un username :\
-![alt text](/images_README/image-34.png)
+Enter an ID, description, and username:\
+![alt text](/images_README/jenkins/image-34.png)
 
-Dans "Username" il faut bien mettre le nom du groupe que nous avons ajouté juste avant, pour nous c'est "jenkins", sinon ça ne marchera pas.
+For "Username", make sure to enter the name of the user we created earlier, which in our case is "jenkins". Otherwise, the configuration will not work.
 
-Finalement, nous allons choisir "Enter directly" pour "Private key" et nous allons y coller notre clé privée :\
-![alt text](/images_README/image-27.png)
+Finally, choose Enter directly for the "Private key" field and paste your private key:\
+![alt text](/images_README/jenkins/image-27.png)
 
-En cliquant sur "Create" nous pourrons constater que notre credentials a bien été configuré !\
-![alt text](/images_README/image-28.png)
+Click "Create", and you will see that the credentials have been successfully configured!\
+![alt text](/images_README/jenkins/image-28.png)
 
 
-Tous nos credentials ont bien été créé :\
-![alt text](/images_README/image-29.png)
+All credentials are now properly set up:\
+![alt text](/images_README/jenkins/image-29.png)
 
-Nous allons maintenant pouvoir passer à la création de notre agent jenkins.
+We can now proceed to create our Jenkins agent.
 
-### Création d'un agent jenkins
+### Creating a Jenkins Agent
 
-L'agent jenkins va utiliser notre VM pour exécuter les actions de notre pipeline.
+The Jenkins agent will use our VM to execute the actions defined in our pipeline.
 
-Donc, avant de s'attarder à la partie directement sur jenkins nous avons dû nous rendre sur notre VM pour installer l'openjdk-17 car c'est celui qu'utilise notre jenkins (cela va lui permettre d'exécuter les actions qu'il doit réaliser) :
+Before setting up the agent in Jenkins, we needed to install OpenJDK 17 on our VM, as this is the version required by our Jenkins instance. This installation allows the agent to execute the necessary tasks:
 ```sh
 sudo apt-get update
 sudo apt-get install -y openjdk-17-jdk -y
 ``` 
 
-Ensuite, pour créer notre agent nous avons dû nous rendre dans cette partie :\
+Next, to create our agent, navigate to the following section in Jenkins:\
 [Tableau de bord > Administrer jenkins > Nœuds > New Node](http://localhost:8080/manage/computer/new)
 
-La première étape est de rentrer un nom pour notre node :
-![alt text](/images_README/image-30.png)
-On clique ensuite sur "Permanent Agent" puis "Create".
+The first step is to provide a name for our node:
+![alt text](/images_README/jenkins/image-30.png)
+Then, select "Permanent Agent" and click "Create."
 
-Nous allons devoir maintenant configurer quelques paramétres importants de notre agent :\
-![alt text](/images_README/image-31.png)
-Nous allons venir rentrer le chemin du dossier "jenkins" que nous avons créé précédemment.
+Now, we need to configure a few essential parameters for our agent:\
+![alt text](/images_README/jenkins/image-31.png)\
+In the "Remote root directory" field, specify the path to the jenkins directory we created earlier on our VM.
 
-Ensuite, dans "Méthode de lancement" nous allons choisir l'option "Launch agent via SSH":\
-![alt text](/images_README/image-32.png)
+Next, under "Launch method," choose the "Launch agent via SSH" option:\
+![alt text](/images_README/jenkins/image-32.png)
 
-Pour finir, nous allons avoir plusieurs options à configurer :\
-![alt text](/images_README/image-33.png)
-Dans "Host" nous avons dû rentrer l'IP de la VM, cependant, tout dépend de la configuration de la VM à la base (si nous avons une interface graphique ou non on pourra mettre "localhost").
+Finally, configure the following options:\
+![alt text](/images_README/jenkins/image-33.png)
+- In the "Host" field, enter the IP address of your VM. Depending on your VM configuration (e.g., if you are using a graphical interface), you may be able to use "localhost" instead.
+- In the "Credentials" field, select the credentials labeled jenkins that we previously created. These credentials will establish the connection between Jenkins and the VM.
+- For "Host Key Verification Strategy," choose "Non verifying Verification Strategy" to avoid connectivity issues. Since this is not an enterprise context, it is acceptable to use this option. Finally, click "Save."
+![alt text](/images_README/jenkins/image-35.png)
 
-Ensuite dans "Credentials" nous choisissons le credentials "jenkins" que nous avons créé auparavant, celui qui va nous permettre d'établir la connexion entre jenkins et notre VM. Et pour finir on choisit "Non verifying Verification Startegy" pour "Host Key Verification Startegy" pour nous éviter les problèmes de connexion, de plus comme nous ne sommes pas dans un contexte d'entreprise ce n'est pas critique de choisir cette option. Et nous cliquons sur "Enregistrer".
-![alt text](/images_README/image-35.png)
+As shown above, the agent has successfully launched.
 
-Comme on peut le voir l'agent s'est correctement lancé.
+### Creating the Pipeline
 
-### Création de la pipeline
+After setting up the agent, we moved on to configuring the pipeline.
 
-Suite à la création de l'agent nous nous sommes attaqués à la configuration de la pipeline.
+#### Configuration of the jenkins.build File
+First, we created a [build jenkins](Jenkins.build). This file specifies the actions that Jenkins will execute during the pipeline.
 
-#### Configuration du fichier jenkins.build
-Dans un premier temps nous avons créer un fichier de [build jenkins](Jenkins.build), ce fichier permet à indiquer à jenkins les actions à exécuter lors de la pipeline.
+Our file is divided into six parts, or "stages." Before defining the stages, we specified the agent that the pipeline should use: "vm-agent".
 
-Notre fichier se découpe en 6 parties, en 6 "stage". Juste avant d'écrire les stages nous avons préciser à notre pipeline quel agent nous voulions utiliser : "vm-agent".
+**Stage 1 :**
+![alt text](/images_README/jenkins/image-36.png)
+This stage clones the source code from our GitHub repository. It specifies the main branch, uses the github-credential for authentication, and fetches the repository from the provided URL. This step ensures the pipeline has access to the necessary files for subsequent stages.
 
-**1er stage :**
-![alt text](/images_README/image-36.png)
-Ce stage va nous permettre de cloner le code source depuis notre dépôt GitHub. Il spécifie la branche main, utilise les identifiants github-credential pour s'authentifier, et récupère le dépôt situé à l'URL fournie. Cela permet de donner au pipeline les fichiers nécessaires pour exécuter les étapes suivantes.
+**Stage 2 :**
+![alt text](/images_README/jenkins/image-37.png)
+In this stage, we build a Docker image for the webapi service. Jenkins navigates to the project-main/webapi directory and uses the Dockerfile located there to create the image named thedevgods/devopsproject:1. This step prepares the containerized image for future use.
 
-**2ème stage :**
-![alt text](/images_README/image-37.png)
-Via ce stage nous construisons une image Docker pour le service webapi. Jenkins va se placer dans le répertoire project-main/webapi et va utiliser le fichier Dockerfile présent dans ce répertoire pour créer l'image nommée thedevgods/devopsproject:1. Cette étape va nous permettre de préparer l'image containerisée pour être utilisée dans le futur.
+**Stage 3 :**
+![alt text](/images_README/jenkins/image-38.png)
+This stage pushes the Docker image created in the previous step to a remote Docker registry. It uses the docker-credential for authentication. Once the image is pushed, it becomes available for other environments, such as Kubernetes clusters (which will be used in later stages), enabling future deployments.
 
-**3ème stage :**
-![alt text](/images_README/image-38.png)
-Ce stage pousse l'image Docker créée précédemment vers un registre Docker distant. Il utilise les credentials docker-credential pour s'authentifier auprès du registre. Une fois l'image poussée, elle devient disponible pour d'autres environnements, tels que des clusters Kubernetes (ce que l'on va utiliser dans les futurs stages), pour des déploiements futurs.
+**Stage 4 :**
+![alt text](/images_README/jenkins/image-39.png)
+This stage deploys the application to the development environment on Kubernetes. It first applies the [namespace-development.yml](/project-main/kubernetes/namespace-development.yml) file to configure the namespace, then uses the [webapi-deployment.yml](/project-main/kubernetes/webapi-deployment.yml) file to deploy the application. Finally, the `kubectl get pods -n development` command displays the status of the pods deployed in the development namespace, ensuring that the deployment was successful.
 
-**4ème stage :**
-![alt text](/images_README/image-39.png)
-Ensuite, ce stage déploie l'application dans l'environnement de développement (development) sur Kubernetes. Il applique d'abord le fichier [namespace-development.yml](/project-main/kubernetes/namespace-development.yml) pour configurer le namespace, puis utilise le fichier [webapi-deployment.yml](/project-main/kubernetes/webapi-deployment.yml) pour déployer l'application. Enfin, la commande `kubectl get pods -n development` affiche l'état des pods déployés dans le namespace development. Cela vérifie que le déploiement s'est effectué correctement.
+**Stage 5 :**
+![alt text](/images_README/jenkins/image-40.png)
+This stage verifies that the application deployed in the development environment is functioning correctly. It makes a curl request to the [/whoami](http://localhost:9090/whoami) endpoint of the deployed service and compares the response to an expected value defined in the script. If the response matches the expected value, the test succeeds with a validation message; otherwise, it raises an error and displays the actual response for debugging.
 
-**5ème stage :**
-![alt text](/images_README/image-40.png)
-Celui-ci va vérifier que l'application déployée dans l'environnement de développement fonctionne correctement. Il effectue une requête curl vers l'endpoint [/whoami](http://localhost:9090/whoami) du service déployé et compare la réponse obtenue avec une réponse attendue définie dans le script. Si la réponse correspond à l'attendu, le test réussit avec un message de validation ; sinon, il déclenche une erreur et affiche la réponse réelle pour permettre le diagnostic.
+**Stage 6 :**
+![alt text](/images_README/jenkins/image-41.png)
+Finally, this stage deploys the application to the production environment, provided that all previous stages were successful. It applies the [namespace-production.yml](/project-main/kubernetes/namespace-production.yml) file to configure the production namespace and uses the [webapi-deployment.yml](/project-main/kubernetes/webapi-deployment.yml) file to deploy the application to production. The `kubectl get pods -n production` command then displays the status of the pods deployed in the production namespace to confirm that everything is functioning as expected.
 
-**6ème stage :**
-![alt text](/images_README/image-41.png)
-Finalenement, ce stage déploie l'application dans l'environnement de production si les étapes précédentes se sont terminées avec succès. Il applique le fichier [namespace-production.yml](/project-main/kubernetes/namespace-production.yml) pour configurer le namespace de production, puis déploie l'application en utilisant le fichier [webapi-deployment.yml](/project-main/kubernetes/webapi-deployment.yml) pour la production. Enfin, la commande `kubectl get pods -n production` affiche l'état des pods déployés dans le namespace de production pour valider que tout fonctionne correctement.
+#### Pipeline Configuration
 
-#### Configuration du pipeline
-
-Une fois cela fait nous avons commencé à paramétré le pipeline sur jenkins, pour cela nous nous sommes rendu à cette section :\
+Once the necessary preparations were completed, we proceeded to configure the pipeline in Jenkins. To do this, we navigated to the following section:\
 [Tableau de bord > Tous > Nouveau Item ](http://localhost:8080/view/all/newJob)\
-![alt text](/images_README/image-44.png)
-Nous rentrons un nom pour notre pipeline, choisissons "Pipeline" et cliquons sur "OK".
+![alt text](/images_README/jenkins/image-44.png)
+We provided a name for our pipeline, selected "Pipeline," and clicked "OK."
 
-Nous sommes ensuite allés directement dans la partie "Pipeline" pour y choisir "Pipeline script from SCM" :\
-![alt text](/images_README/image-45.png)
+Next, we went directly to the "Pipeline" section and selected "Pipeline script from SCM":\
+![alt text](/images_README/jenkins/image-45.png)
 
-Ensuite pour le type de "SCM" nous avons choisi "Git" :\
-![alt text](/images_README/image-46.png)
-Nous avons renseigné l'URL de notre repository GitHub qui posséde le code de notre application avec tous les fichiers de configurations. Et nous avons sélectionné les credentials que nous avons créé pour notre repository GitHub, permettant ainsi à jenkins de récupérer le code source se trouvant dans un repository privé (c'est pour cela que nous avons besoin de renseigner nos credentials).
+For the "SCM" type, we chose "Git":\
+![alt text](/images_README/jenkins/image-46.png)
+We entered the URL of our GitHub repository, which contains the application's source code and all the necessary configuration files. Additionally, we selected the credentials we had previously created for our GitHub repository, allowing Jenkins to access the source code in a private repository. This step is crucial for repositories that require authentication.
 
-Pour finir nous indiquons la branche que nous souhaitons cibler dans notre repository, en l'occurrence, nous, nous avons mis "main" :\
-![alt text](/images_README/image-48.png)
-Et nous indiquons le chemin pour pouvoir accéder à notre fichier [jenkins.build](Jenkins.build)
+Finally, we specified the branch we wanted to target in the repository— in our case, "main":\
+![alt text](/images_README/jenkins/image-48.png)
+We also provided the path to our [jenkins.build](Jenkins.build) file.
 
-On clique sur "Sauvegarder" et ensuite nous avons lancé un build pour tester si tout fonctionnait correctement.
-![alt text](/images_README/image-49.png)
+After clicking "Save," we triggered a build to test if everything was working correctly.
+![alt text](/images_README/jenkins/image-49.png)
 
+### Verification
 
+We can confirm that the pipeline executed successfully, as shown in the [status](/) :\
 
-install :
--> Git Plugin (pas forcément obligé)
--> Docker Pipeline Plugin
--> Credentials Plugin (pas forcément obligé)
+Or in the [Stages](/) :\
 
-Config :
-Tableau de bord > Administrer jenkins > Identifiants
+Additionally, we can verify the execution of all stages and view their output in the [Console Output](/):
 
-- Setup un credential en mode "nom utilisateur et mdp" pour son GitHub.
-- Générer un access token de son GitHub : cocher "repo", "read:org" et "user:email"
+Alternatively, you can check the [Pipeline Console](/), which might be clearer:\
 
-- Setup un credential en mode "nom utilisateur et mdp" pour son DockerHub.
-- Générer un access token de son DockerHub
+Moreover, if we check our DockerHub repository, we can see the image of our API has been successfully uploaded:\
 
-- Setup un credential en mode "SSH Username with private key" pour autoriser la connexion à jenkins sur notre VM, pour la transformer en slave.
-- Copier coller la clé privée générée
+Finally, by accessing our VM, we can confirm that both environments have been created, and the API has been deployed to them:\
 
-Config agent jenkins :
-Tableau de bord > Nœuds > New node
+We can even access it and navigate directly to its endpoint:\
 
-- Nommez le node
-- Sélectionnez 'Permanent Agent'
-- Ajoutez les labels 'docker' et 'jenkins'
-- Mettez comme répertoire de travail '/home/jenkins'
-- Méthode de lanceur d'agent : 'Launch agent via SSH'
-- Host : adresse IP de la VM
-- Credentials : sélectionnez le credential que vous avez créé pour la connexion SSH
-- Host Key Verification Strategy : 'Non verifying Verification Strategy'
+## Conclusion
 
-Créer la pipeline :
-Tableau de bord > Nouvel élément > Pipeline
-- Nommez la pipeline
-- Sélectionnez 'Pipeline script from SCM'
-- SCM : Git
-- Repository URL : URL du repo
-- Credentials : sélectionnez le credential que vous avez créé pour GitHub
-- Branches to build : main
-- Script Path : path/to/jenkinsfile
-- Enregistrez
-- Build Now
+In this section, we learned how to create Kubernetes files to deploy an application to different environments, such as development and production, by defining namespaces, deployments, and appropriate services. We also configured Jenkins to automate these deployments through a CI/CD pipeline, which manages the steps of building, testing, and deploying based on the results of a unit test.
+
+This integration ensures continuous deployment while verifying that the application works correctly before promoting it to the production environment.

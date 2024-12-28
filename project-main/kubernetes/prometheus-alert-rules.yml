@@ -11,3 +11,4 @@ serverFiles:
             annotations:
               summary: Kubernetes Pod not healthy (instance {{ $labels.instance }})
               description: "Pod {{ $labels.namespace }}/{{ $labels.pod }} has been in a non-running state for longer than 15 minutes.\n  VALUE = {{ $value }}\n  LABELS = {{ $labels }}"
+
