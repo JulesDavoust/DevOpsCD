@@ -39,7 +39,7 @@ pipeline {
         script {
           dir('project-main/kubernetes') {
             sh "kubectl apply -f namespace-development.yml"
-            sh "kubectl apply -f webapi-deployment.yml"
+            sh "kubectl apply -f webapi-deployment.yml -n development"
             sh "kubectl get pods -n development"
           }
         }
@@ -71,7 +71,7 @@ pipeline {
         script {
           dir('project-main/kubernetes') {
             sh "kubectl apply -f namespace-production.yml"
-            sh "kubectl apply -f webapi-deployment.yml"
+            sh "kubectl apply -f webapi-deployment.yml -n production"
             sh "kubectl get pods -n production"
           }
         }
