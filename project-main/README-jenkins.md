@@ -54,7 +54,7 @@ sudo docker run -d -p 8080:8080 -p 50000:50000 --name jenkins --restart unless-s
 
 Next, we retrieved the Jenkins credentials to log in:
 ```sh
-sudo docker exec Jenkins cat /var/jenkins_home/secrets/initialAdminPassword
+sudo docker exec jenkins cat /var/jenkins_home/secrets/initialAdminPassword
 ```
 
 Now, let's delve deeper into the specific steps we took to configure Jenkins.
@@ -130,8 +130,11 @@ To achieve this, we need to generate an RSA key pair on our VM. First, we will c
 sudo adduser jenkins
 chown -R jenkins:jenkins /home/jenkins
 chmod 700 /home/jenkins
+sudo usermod -aG docker jenkins
+sudo systemctl restart docker
 ```
 ![alt text](/images_README/jenkins/image-18.png)
+![alt text](/images_README/jenkins/image-bisbis.png)
 
 
 Next, inside the jenkins directory, we will create a .ssh folder:\

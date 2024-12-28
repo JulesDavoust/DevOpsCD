@@ -37,9 +37,11 @@ pipeline {
     stage('Deploy to Development') {
       steps {
         script {
-          sh "kubectl apply -f kubernetes/namespace-development.yml"
-          sh "kubectl apply -f kubernetes/webapi-deployment.yml"
-          sh "kubectl get pods -n development"
+          dir('project-main/kubernetes') {
+            sh "kubectl apply -f namespace-development.yml"
+            sh "kubectl apply -f webapi-deployment.yml"
+            sh "kubectl get pods -n development"
+          }
         }
       }
     }
@@ -67,9 +69,11 @@ pipeline {
       }
       steps {
         script {
-          sh "kubectl apply -f kubernetes/namespace-production.yml"
-          sh "kubectl apply -f kubernetes/webapi-deployment.yml"
-          sh "kubectl get pods -n production"
+          dir('project-main/kubernetes') {
+            sh "kubectl apply -f namespace-production.yml"
+            sh "kubectl apply -f webapi-deployment.yml"
+            sh "kubectl get pods -n production"
+          }
         }
       }
     }
