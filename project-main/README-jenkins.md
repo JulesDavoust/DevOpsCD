@@ -6,7 +6,7 @@ First, we will discuss how we set up the testing for our Go application to ensur
 
 ## Testing the Application in Go
 
-You can find the code for our application in the [main.go](webapi/main.go) file and the API test in the [main_test.go](webapi/main_test.go) file.
+You can find the code for our application in the [main.go](webapi/main.go) file.
 
 The first step involved familiarizing ourselves with the Go programming language and understanding the existing code. This allowed us to modify the application and add our names, surnames, and class group to the [/whoami]() endpoint.
 
@@ -128,9 +128,9 @@ Why do we need to configure credentials for our VM? Simply because we will allow
 
 To achieve this, we need to generate an RSA key pair on our VM. First, we will create a jenkins user, which will also create a jenkins directory, by executing the following commands:
 ```sh
-sudo adduser jenkins
+groupadd jenkins
+useradd -g jenkins -d /home/jenkins -m -s /bin/bash jenkins
 chown -R jenkins:jenkins /home/jenkins
-chmod 700 /home/jenkins
 sudo usermod -aG docker jenkins
 sudo systemctl restart docker
 ```
