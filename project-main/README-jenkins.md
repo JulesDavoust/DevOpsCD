@@ -43,6 +43,7 @@ Finally, we made a small adjustment to the `request1()` function by changing the
 
 ## Jenkins Configuration
 
+
 The final step of the build and deploy process was configuring Jenkins. Jenkins allows us to execute a pipeline that performs tasks such as building images, deploying the application in the development environment for testing, and then deploying it to production if the test passes.
 
 Before creating the pipeline, we had to configure Jenkins to connect to our VM and use it as a slave. Additionally, we needed to enable Jenkins to access our GitHub repository and DockerHub (to push the images).
@@ -298,7 +299,7 @@ sudo cp /home/<our user>/.kube/config /home/jenkins/.kube/config
 sudo chown jenkins:jenkins /home/jenkins/.kube/config
 sudo nano /home/jenkins/.kube/config
 ```
-![alt text](image-130.png)
+![alt text](/images_README/jenkins/image-130.png)
 In the configuration file, we replaced the following lines:
 ```
 client-certificate: /home/<our user>/.minikube/profiles/minikube/client.crt
@@ -311,7 +312,7 @@ client-certificate: /home/jenkins/.minikube/profiles/minikube/client.crt
 client-key: /home/jenkins/.minikube/profiles/minikube/client.key
 certificate-authority: /home/jenkins/.minikube/ca.crt
 ```
-![alt text](image-131.png)
+![alt text](/images_README/jenkins/image-131.png)
 
 Finally, we created a .minikube directory for the Jenkins user and copied specific files from the main user's .minikube directory into it. To do so, we executed these commands:
 ```sh
@@ -321,7 +322,7 @@ sudo cp /home/jules/.minikube/profiles/minikube/client.key /home/jenkins/.miniku
 sudo cp /home/jules/.minikube/ca.crt /home/jenkins/.minikube/
 sudo chown -R jenkins:jenkins /home/jenkins/.minikube
 ```
-![alt text](image-132.png)
+![alt text](/images_README/jenkins/image-132.png)
 
 We can now proceed with configuring the Jenkins pipeline.
 

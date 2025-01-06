@@ -8,6 +8,6 @@ Notre objectif a été de mettre en place des tests sur notre application en go,
 
 Nous allons vous présenter de manière détaillée les actions effectuées dans les parties suivantes :
 
-**1. [Diagramme of our solution](README-jenkins.md)**\
+**1. [Diagram of our solution](README-diagram.md)**\
 **2. [Build and deploy our application](README-jenkins.md)**\
 **3. [Monitoring and logs management](README-monitoring.md)**
