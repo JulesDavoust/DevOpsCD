@@ -1,0 +1,45 @@
+alertmanager:
+  config:
+    global:
+      smtp_smarthost: 'smtp.gmail.com:587'
+      smtp_from: 'ntmlff.send.notification@gmail.com'
+      smtp_auth_username: 'ntmlff.send.notification@gmail.com'
+      smtp_auth_password: 'qpxx mmjy vizb zeky'
+      smtp_require_tls: true
+    route:
+      receiver: 'default-email-alert'
+      routes:
+        # Route for the InstanceDown alert
+        - match:
+            alertname: "InstanceDown"
+          receiver: 'lazhar-alert'
+
+        # Route for all other alerts
+        - match:
+            alertname: "KubernetesPodNotHealthy"
+          receiver: 'team-email-alert'
+
+    receivers:
+      # Default receiver (if no specific routing match is found)
+      - name: 'default-email-alert'
+        email_configs:
+          - to: 'jules.davoustperso@gmail.com'
+            send_resolved: true
+            subject: '[Alert][Team: DevOpsCD Jules, Vadim, Robin] {{ .CommonLabels.alertname }}'
+
+      # Receiver for Lazhar
+      - name: 'lazhar-alert'
+        email_configs:
+          - to: 'lazhar.hamel@efrei.fr'
+            send_resolved: true
+            subject: '[Alert][Team: DevOps Jules, Vadim, Robin] {{ .CommonLabels.alertname }}'
+
+      # Receiver for team alerts
+      - name: 'team-email-alert'
+        email_configs:
+          - to: 'jules.davoustperso@gmail.com'
+            send_resolved: true
+            subject: '[Alert][Team: DevOpsCD Jules, Vadim, Robin] {{ .CommonLabels.alertname }}'
+
+
+            

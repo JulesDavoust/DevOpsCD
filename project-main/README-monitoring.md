@@ -157,31 +157,35 @@ Now that Grafana has been configured with Prometheus, we will proceed to the con
 
 Alert Manager allows us to send alert notifications to our email based on various conditions, such as if an instance has been down for more than a minute.
 
-The first step was to create a file, [prometheus-alerts-rules.yaml](/project-main/kubernetes/prometheus-alert-rules.yml), with an alert rule for Prometheus Alert Manager:
+The first step was to create a file, [prometheus-alerts-rules.yaml](/project-main/kubernetes/prometheus-alert-rules.yml), with two alerts rules for Prometheus Alert Manager:
 ![alt text](/images_README/monitoring/image-28.png)
-This file defines an alert rule to monitor the health of Kubernetes pods. It triggers a critical alert if a pod remains in a non-operational state (e.g., Pending, Unknown, or Failed) for more than 15 minutes, providing information about the pod and its namespace.
+- The first rule, KubernetesPodNotHealthy, monitors the health of Kubernetes pods. It triggers a critical alert if a pod remains in a non-operational state (Pending, Unknown, or Failed) for more than 15 minutes. The alert includes details about the affected pod, its namespace, and the team name (DevOpsCD Jules, Vadim, Robin) for identification.
+- The second rule, InstanceDown, checks the availability of instances. It triggers a critical alert if an instance is down (no response to health checks) for more than 1 minute. The alert provides details about the affected instance and its associated job 
 
 To ensure Prometheus applied this new alert rule without altering existing configurations, we used the following command:
 ```sh
-helm upgrade --reuse-values -f prometheus-alerts-rules.yaml prometheus prometheus-community/prometheus
+helm upgrade --reuse-values -f prometheus-alerts-rules.yaml prometheus prometheus-community/prometheus -n monitoring
 ```
 
-Next, to allow Alert Manager to send email notifications when the rule triggers an alert, we created an [alertmanager.yml](/project-main/kubernetes/alertmanager.yml) configuration file:
-![alt text](/images_README/monitoring/image-29.png)
-This file configures Alert Manager to send email notifications via Gmail's SMTP server. Alerts are sent to the specified recipient (jules.davoustperso@gmail.com) from the sender address ntmlff.send.notification@gmail.com.
+Next, to allow Alert Manager to send email notifications when the rules triggers an alert, we created an [alertmanager.yml](/project-main/kubernetes/alertmanager-config.yml) configuration file:
+![alt text](/images_README/monitoring/image-806.png)
+![alt text](/images_README/monitoring/image-807.png)
+This file configures Alert Manager to send email notifications via Gmail's SMTP server. Alerts are routed based on their type:
+1. The KubernetesPodNotHealthy alert is sent to the team's email (jules.davoustperso@gmail.com).
+2. The InstanceDown alert is specifically sent to Lazhar Hamel (lazhar.hamel@efrei.fr). All alerts are clearly labeled with the team name (DevOpsCD Jules, Vadim, Robin) in their subject line.
 
 We applied this configuration using the same command as before:
 ```sh
-helm upgrade --reuse-values -f alertmanager-config.yaml prometheus prometheus-community/prometheus
+helm upgrade prometheus prometheus-community/prometheus -n monitoring --reuse-values -f alertmanager-config.yaml
 ```
 
 After creating and applying these configuration files, we reconfigured the LoadBalancer (or port forwarding, depending on the setup). We repeated the steps outlined in the section [Accéder à l'interface Grafana et Prometheus](#accéder-à-linterface-grafana-et-prometheus) to reconfigure the services for LoadBalancer access from our local machine.
 
-By navigating to the "Alerts" tab in Prometheus, we verified that our rule was applied correctly:\
-![alt text](/images_README/monitoring/image-40.png)
+By navigating to the "Alerts" tab in Prometheus, we verified that our rules were applied correctly:\
+![alt text](/images_README/monitoring/image-800.png)
 
 **Testing the Configuration**\
-To test the configuration, we created two test files:\
+To test the configuration, we created two test files:
 
 1. [pending-test-pod.yml](/project-main/kubernetes/pending-test-pod.yml) : This file attempts to create a pod requesting more resources than the VM can provide, leaving the pod in a "Pending" state.\
 ![alt text](/images_README/monitoring/image-31.png)
@@ -206,14 +210,18 @@ In the Prometheus "Alerts" tab, we observed the notifications indicating that on
 After 15 minutes, these alerts transitioned to "Firing" status:\
 ![alt text](/images_README/monitoring/image-54.png)
 
+Finally, when we tried to delete an instance, to test the second rule, we can see that the alert worked well in Prometheus, and a minute later it went to critical:
+![alt text](/images_README/monitoring/image-803.png)
+![alt text](/images_README/monitoring/image-804.png)
+
 At this point, we confirmed that Alert Manager successfully processed the alerts:\
 ![alt text](/images_README/monitoring/image-51.png)
-Both alerts were displayed as expected.
+All the alerts were displayed as expected.
 
-Finally, we verified that two emails were sent to the recipient address specified in the [alertmanager.yml](/project-main/kubernetes/alertmanager.yml) file. These emails detailed the critical alerts:\
+Finally, we verified that two emails were sent to the recipient address specified in the [alertmanager.yml](/project-main/kubernetes/alertmanager-config.yml) file. These emails detailed the critical alerts:\
 ![alt text](/images_README/monitoring/image-49.png)
 ![alt text](/images_README/monitoring/image-50.png)
-The emails were sent from the configured sender address and included details about the "Pending" and "Failed" pods.
+The emails were sent from the configured sender address and included details about the "Pending" and "Failed" pods. And, normaly the email about the InstanceDown rule has been sended to lazhar.hamel@efrei.fr
 
 With the configuration of Alert Manager complete, we can now proceed to configure Loki.
 
