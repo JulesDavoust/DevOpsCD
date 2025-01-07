@@ -1,0 +1,33 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: instance-test
+  labels:
+    app: instance-test
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: instance-test
+  template:
+    metadata:
+      labels:
+        app: instance-test
+    spec:
+      containers:
+        - name: nginx
+          image: nginx:latest
+          ports:
+            - containerPort: 80
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: instance-test
+spec:
+  selector:
+    app: instance-test
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 80

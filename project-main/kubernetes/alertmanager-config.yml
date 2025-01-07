@@ -25,21 +25,15 @@ alertmanager:
         email_configs:
           - to: 'jules.davoustperso@gmail.com'
             send_resolved: true
-            subject: '[Alert][Team: DevOpsCD Jules, Vadim, Robin] {{ .CommonLabels.alertname }}'
 
       # Receiver for Lazhar
       - name: 'lazhar-alert'
         email_configs:
           - to: 'lazhar.hamel@efrei.fr'
             send_resolved: true
-            subject: '[Alert][Team: DevOps Jules, Vadim, Robin] {{ .CommonLabels.alertname }}'
 
       # Receiver for team alerts
       - name: 'team-email-alert'
         email_configs:
           - to: 'jules.davoustperso@gmail.com'
             send_resolved: true
-            subject: '[Alert][Team: DevOpsCD Jules, Vadim, Robin] {{ .CommonLabels.alertname }}'
-
-
-            

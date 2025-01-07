@@ -12,6 +12,7 @@ serverFiles:
             annotations:
               summary: "[Team: DevOpsCD Jules, Vadim, Robin] Kubernetes Pod not healthy (instance {{ $labels.instance }})"
               description: "Pod {{ $labels.namespace }}/{{ $labels.pod }} has been in a non-running state for longer than 15 minutes.\n  VALUE = {{ $value }}\n  LABELS = {{ $labels }}"
+              email_subject: "Team Jules, Vadim, Robin : Critical Alert: Pod {{ $labels.namespace }}/{{ $labels.pod }}"
           # Alert: Instances down
           - alert: InstanceDown
             expr: up == 0
@@ -21,3 +22,4 @@ serverFiles:
             annotations:
               summary: "[Team: DevOpsCD Jules, Vadim, Robin] Instance {{ $labels.instance }} down"
               description: "{{ $labels.instance }} of job {{ $labels.job }} has been down for more than 1 minute."
+              email_subject: "Team Jules, Vadim, Robin : Critical Alert: Instance {{ $labels.instance }} is Down"
