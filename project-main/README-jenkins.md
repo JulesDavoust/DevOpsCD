@@ -39,7 +39,7 @@ Finally, we made a small adjustment to the `request1()` function by changing the
 ![alt text](/images_README/jenkins/image-3.png) ![alt text](/images_README/jenkins/image-4.png)
 
 
-## Configuration de Kubernetes et docker
+## Configuration of Kubernetes and docker
 
 After modifing the application's functions we can now create the elements needed to deploy within Kubernetes with docker.
 

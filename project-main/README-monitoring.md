@@ -370,7 +370,7 @@ We can see that in the "development" namespace, there are no logs containing the
 On peut voir que dans le namespace "development" il n'y pas de logs comportant le mot "error" :\
 ![alt text](/images_README/monitoring/image-300.png)
 
-And in the "production" namespace:\
+And in the "development" namespace:\
 ![alt text](/images_README/monitoring/image-301.png)
 We observe that there are logs containing the term "error," but they come from the "error-logger" pod that we created to simulate logs.
 
