@@ -41,6 +41,107 @@ Finally, we made a small adjustment to the `request1()` function by changing the
 
 ## Configuration de Kubernetes et docker
 
+After modifing the application's functions we can now create the elements needed to deploy within Kubernetes with docker.
+
+The first step is to create the Docker image.
+
+### Create Docker image
+To do so we will of course create a [Dockerfile](/project-main/Dockerfile).
+
+The first line allow us to say that we want to create an image for Go (the language of our app) :
+```docker
+FROM golang:latest
+```
+Then the second lines allow us to copy our app into the _app_ directory of our image :
+```docker
+WORKDIR /app
+COPY ./webapi/ .
+```
+
+After that we ask the image to download the Go modules needed to run our app and to build our app:
+```docker
+RUN go mod download
+RUN CGO_ENABLED=0 GOOS=linux go build -o /devops-prj-webapp
+```
+
+Finally we allow the app to be accessed via the port 9090 (the one put in the app code) and we run our app :
+```docker
+EXPOSE 9090
+CMD ["/devops-prj-webapp"]
+```
+
+The `EXPOSE` line isn't needed since we can do port forwarding with any container's ports so it's only an indication on the image.
+
+We then build and push the images with docker :
+```sh
+sudo docker build -t devops-prj-webapp .
+sudo docker push devops-prj-webapp:1
+```
+
+We can now create the YML file that will allow us to deploy it within Kubernetes : [webapi-deployment.yml](/project-main/kubernetes/webapi-deployment.yml).
+
+### Create YML files
+
+The first step is to create two file that will allow us to create the asked namespaces (see the files [namespace-development.yml](/project-main/kubernetes/namespace-development.yml), [namespace-production.yml](/project-main/kubernetes/namespace-production.yml)) 
+
+![alt text](/images_README/kubernetes/image-1.png) ![alt text](/images_README/kubernetes/image-2.png)
+
+We can now talk in details the main file [webapi-deployment.yml](/project-main/kubernetes/webapi-deployment.yml).
+
+First of all we create a deployment and we name it _devops-prj-backend_ with the label _backend_ :
+```yml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: devops-prj-backend
+  labels:
+    name: backend
+```
+
+Then we tell the name of the docker image we want to use for the deployment (the one that we created before) and how many time we want to replicate the created pods (here 1) :
+```yml
+spec:
+  replicas: 1
+  template:
+    spec:
+      containers:
+        - name: backend-container
+          image: thedevgods/devopsproject:1
+```
+We also chose when we went to pull the image (here `Always`) and which port we want to be able to access :
+```yml
+spec:
+  template:
+    spec:
+      containers:
+        - imagePullPolicy: Always
+          ports:
+            - containerPort: 9090
+```
+
+Now we want to create a Service with the name _backend_ and the same _backend_ label :
+```yml
+apiVersion: v1
+kind: Service
+metadata:
+  name: backend
+  labels:
+    app: backend
+```
+
+Finally we declare the type of our Service (here _NodePort_) and the port that we want to access :
+```yml
+spec:
+  type: NodePort
+  ports:
+    - port: 9090
+```
+
+We have to create a Service to be able to access our Go API from outside the Pods.
+
+
+
+
 ## Jenkins Configuration
 
 
